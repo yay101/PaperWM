@@ -23,6 +23,7 @@ This fork includes several additions and fixes on top of upstream PaperWM:
 **New features:**
 - **Hide dash in overview** — Setting to hide the GNOME Shell dash (dock) in the overview. Toggle in PaperWM preferences.
 - **Bundled web search** — Integrated [Quick Web Search](https://gitlab.com/chet-buddy/quick-web-search) as a built-in search provider. Type in the overview search to launch a web search. Supports 12 search engines, configurable in settings. Recognizes URLs and opens them directly.
+- **Cursor follows focus** — When switching windows via keyboard (Super+Arrow, live alt-tab) or trackpad swipe, the cursor warps to the center of the newly focused window. Mouse clicks leave the cursor alone. Skips warping if the cursor is already on the target window.
 
 ## Installation
 
