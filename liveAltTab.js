@@ -107,6 +107,18 @@ export const LiveAltTab = GObject.registerClass(
             case Keybindings.idOf('live-alt-tab-scratch-backward'):
                 mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
                 break;
+            default:
+                // For non-navigation actions, check if it's a PaperWM
+                // keybinding that should work during the switcher
+                // (activeInNavigator), and execute it directly.
+                let action = Keybindings.byId(mutterActionId);
+                if (action?.options?.activeInNavigator) {
+                    let space = Tiling.spaces.selectedSpace;
+                    let metaWindow = space.selectedWindow;
+                    action.handler(metaWindow, space);
+                    return Clutter.EVENT_STOP;
+                }
+                break;
             }
             // let action = Keybindings.byId(mutterActionId);
             // if (action && action.options.activeInNavigator) {
