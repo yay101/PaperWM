@@ -4734,6 +4734,10 @@ export function focus_handler(metaWindow) {
     if (warpCursorOnFocus && metaWindow) {
         warpCursorOnFocus = false;
         let frame = metaWindow.get_frame_rect();
+        let [px, py] = global.get_pointer();
+        if (px >= frame.x && px < frame.x + frame.width &&
+            py >= frame.y && py < frame.y + frame.height)
+            return;
         Utils.warpPointer(
             frame.x + Math.floor(frame.width / 2),
             frame.y + Math.floor(frame.height / 2),
