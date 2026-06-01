@@ -466,6 +466,7 @@ class NavigatorClass {
                 hasFocus = mw.has_focus() || hasFocus;
             });
             if (hasFocus) {
+                Tiling.warpCursorOnFocus = true;
                 Tiling.focus_handler(selected);
             } else {
                 Main.activateWindow(selected);

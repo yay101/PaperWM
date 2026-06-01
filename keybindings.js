@@ -366,9 +366,15 @@ export function byId(mutterId) {
 
 export function asKeyHandler(actionHandler) {
     if (Utils.version[0] >= 48) {
-        return (display, mw, evt, binding) => actionHandler(mw, Tiling.spaces.selectedSpace, { display, binding });
+        return (display, mw, evt, binding) => {
+            Tiling.warpCursorOnFocus = true;
+            actionHandler(mw, Tiling.spaces.selectedSpace, { display, binding });
+        };
     } else {
-        return (display, mw, binding) => actionHandler(mw, Tiling.spaces.selectedSpace, { display, binding });
+        return (display, mw, binding) => {
+            Tiling.warpCursorOnFocus = true;
+            actionHandler(mw, Tiling.spaces.selectedSpace, { display, binding });
+        };
     }
 }
 

@@ -95,6 +95,7 @@ let startupTimeoutId, timerId, fullscreenStartTimeout, stackSlurpTimeout, worksp
 let monitorChangeTimeout, driftTimeout;
 let workspaceSettings;
 export let inGrab;
+export let warpCursorOnFocus = false;
 export function enable(extension) {
     inGrab = false;
 
@@ -4703,6 +4704,17 @@ export function focus_handler(metaWindow) {
      * hidden.
      */
     ensureViewport(metaWindow, space, { moveto: !Main.overview.visible });
+
+    // Warp cursor to the focused window if focus came from a keyboard
+    // shortcut or trackpad gesture rather than a mouse click.
+    if (warpCursorOnFocus && metaWindow) {
+        warpCursorOnFocus = false;
+        let frame = metaWindow.get_frame_rect();
+        Utils.warpPointer(
+            frame.x + Math.floor(frame.width / 2),
+            frame.y + Math.floor(frame.height / 2),
+            false);
+    }
 
     Topbar.fixTopBar();
 }
