@@ -71,6 +71,7 @@ export function enable(extension) {
         'overview-ensure-viewport-animation',
         'overview-min-windows-per-row',
         'overview-max-window-scale',
+        'hide-overview-dash',
         'minimap-shade-opacity',
         'selection-border-size',
         'selection-border-radius-top',

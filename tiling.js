@@ -678,7 +678,7 @@ export class Space extends Array {
          * If current window is fullscreened, then treat workarea as fullscreen (y = 0).
          * This a "flash of topbar spacing") before consecutive layout call resolves.
          */
-        const panelBoxHeight = Topbar.panelBox.height;
+        const panelBoxHeight = Topbar.getPanelHeight();
         const primaryMonitor = Main.layoutManager.primaryMonitor;
         switch (true) {
         case this.selectedWindow?.fullscreen:
@@ -686,16 +686,9 @@ export class Space extends Array {
             this.setSpaceTopbarElementsVisible(false);
             break;
         case this.monitor === primaryMonitor: {
-            if (!this.showTopBar) {
-                // remove panelbox height
+            if (!this.showTopBar && workArea.y > Settings.prefs.vertical_margin) {
                 workArea.y -= panelBoxHeight;
                 workArea.height += panelBoxHeight;
-
-                if (this.showPositionBar) {
-                    // add panelbox height if need to show window position bar
-                    workArea.y += panelBoxHeight;
-                    workArea.height -= panelBoxHeight;
-                }
             }
             break;
         }

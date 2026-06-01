@@ -748,6 +748,11 @@
         <summary>Sets the animation when exiting GNOME overview and ensuring selected window is in view. 0:NONE, 1:TRANSLATE, 2:FADE</summary>
     </key>
 
+    <key type="b" name="hide-overview-dash">
+        <default>false</default>
+        <summary>Hide the dash/dock in the GNOME overview</summary>
+    </key>
+
     <key type="as" name="winprops">
         <default><![CDATA[[]]]></default>
         <summary>Array of winprops as (JSON) string objects</summary>

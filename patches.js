@@ -44,6 +44,7 @@ export function enable(extension) {
     setupOverrides();
     enableOverrides();
     setupRuntimeDisables();
+    setupOverviewDashToggle();
     setupActions();
 }
 
@@ -544,6 +545,26 @@ export function restoreRuntimeDisables() {
         } catch (e) {
             console.error(e);
         }
+    });
+}
+
+/**
+ * Hides the dash in the overview when the hide-overview-dash setting is enabled.
+ */
+export function setupOverviewDashToggle() {
+    signals.connect(Main.overview, 'showing', () => {
+        if (gsettings.get_boolean('hide-overview-dash'))
+            Main.overview.dash?.hide();
+    });
+    signals.connect(Main.overview, 'hidden', () => {
+        if (gsettings.get_boolean('hide-overview-dash'))
+            Main.overview.dash?.show();
+    });
+    signals.connect(gsettings, 'changed::hide-overview-dash', () => {
+        if (!gsettings.get_boolean('hide-overview-dash') && !Main.overview.visible)
+            Main.overview.dash?.show();
+        if (gsettings.get_boolean('hide-overview-dash') && Main.overview.visible)
+            Main.overview.dash?.hide();
     });
 }
 

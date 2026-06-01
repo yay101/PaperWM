@@ -28,7 +28,16 @@ export let menu, focusButton, openPositionButton;
 let openPrefs, screenSignals, signals, gsettings;
 let activeOpenWindowPositions;
 
+let savedPanelHeight = 0;
+
+export function getPanelHeight() {
+    if (panelBox.height > 0)
+        savedPanelHeight = panelBox.height;
+    return savedPanelHeight;
+}
+
 export function enable (extension) {
+    getPanelHeight();
     activeOpenWindowPositions = [
         {
             mode: Settings.OpenWindowPositions.RIGHT,
@@ -929,6 +938,8 @@ export function fixTopBar() {
     // check if is currently fullscreened (check focused-floating, focused-scratch, and selected/tiled window)
     const fullscreen = focusIsFloatOrScratch ? focused.fullscreen : selected && selected.fullscreen;
 
+    const wasVisible = panelBox.visible;
+
     if (normal && !space.showTopBar) {
         hideTopBar();
     }
@@ -938,13 +949,19 @@ export function fixTopBar() {
     else {
         showTopBar();
     }
+
+    if (wasVisible !== panelBox.visible) {
+        space.queueLayout();
+    }
 }
 
 export function showTopBar() {
+    panelBox.scale_y = 1;
     panelBox.show();
 }
 
 export function hideTopBar() {
+    panelBox.scale_y = 0;
     panelBox.hide();
 }
 

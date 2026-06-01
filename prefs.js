@@ -471,6 +471,7 @@ class SettingsWidget {
         booleanStateChanged('show-focus-mode-icon');
         booleanStateChanged('show-open-position-icon');
         booleanStateChanged('disable-topbar-styling', true);
+        booleanStateChanged('hide-overview-dash');
         // disabled since opposite of gnome-pill
         // booleanSetState('show-workspace-indicator');
         percentValueChanged('maximize-width-percent', 'maximize-width-percent');
