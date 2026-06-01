@@ -12,6 +12,18 @@ New features and fixes aren't generally backported to older Gnome shell versions
 
 Have questions or comments?  Please ask on our [Github Discussions](https://github.com/paperwm/PaperWM/discussions) board.
 
+## Fork changes (yay101/PaperWM)
+
+This fork includes several additions and fixes on top of upstream PaperWM:
+
+**Fixes:**
+- **Top bar hiding** — Fixed windows not resizing to fill the screen when the top bar is hidden. `scale_y` is set to zero before hiding so gnome-shell's strut recalculation sees a zero-height panel. The work area adjustment now uses a cached panel height and guards against double-adjustment.
+- **Live alt-tab keybindings** — PaperWM keybindings (e.g. `Super+W` to close, `Super+T` for scratch) now work while holding `Super` during the live window switcher, without needing to release and re-press.
+
+**New features:**
+- **Hide dash in overview** — Setting to hide the GNOME Shell dash (dock) in the overview. Toggle in PaperWM preferences.
+- **Bundled web search** — Integrated [Quick Web Search](https://gitlab.com/chet-buddy/quick-web-search) as a built-in search provider. Type in the overview search to launch a web search. Supports 12 search engines, configurable in settings. Recognizes URLs and opens them directly.
+
 ## Installation
 
 ### Install via [extensions.gnome.org](https://extensions.gnome.org/extension/6099/paperwm/) (recommended)
