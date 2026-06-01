@@ -96,6 +96,28 @@ let monitorChangeTimeout, driftTimeout;
 let workspaceSettings;
 export let inGrab;
 export let warpCursorOnFocus = false;
+
+let lastInputWasPointerButton = false;
+function initInputTracking() {
+    signals.connect(global.stage, 'captured-event', (_actor, event) => {
+        switch (event.type()) {
+        case Clutter.EventType.KEY_PRESS:
+        case Clutter.EventType.TOUCH_BEGIN:
+        case Clutter.EventType.TOUCH_UPDATE:
+        case Clutter.EventType.TOUCH_END:
+        case Clutter.EventType.TOUCHPAD_SWIPE:
+        case Clutter.EventType.TOUCHPAD_PINCH:
+            warpCursorOnFocus = true;
+            lastInputWasPointerButton = false;
+            break;
+        case Clutter.EventType.BUTTON_PRESS:
+            warpCursorOnFocus = false;
+            lastInputWasPointerButton = true;
+            break;
+        }
+        return Clutter.EVENT_PROPAGATE;
+    });
+}
 export function enable(extension) {
     inGrab = false;
 
@@ -112,6 +134,8 @@ export function enable(extension) {
 
     signals = new Utils.Signals();
     grabSignals = new Utils.Signals();
+
+    initInputTracking();
 
     workspaceChangeTimeouts = []; // init array to hold timeouts
 
