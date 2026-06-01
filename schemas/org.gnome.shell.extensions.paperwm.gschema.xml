@@ -753,6 +753,11 @@
         <summary>Hide the dash/dock in the GNOME overview</summary>
     </key>
 
+    <key type="i" name="search-engine">
+        <default>0</default>
+        <summary>Web search engine (0=DuckDuckGo)</summary>
+    </key>
+
     <key type="as" name="winprops">
         <default><![CDATA[[]]]></default>
         <summary>Array of winprops as (JSON) string objects</summary>

@@ -72,6 +72,7 @@ export function enable(extension) {
         'overview-min-windows-per-row',
         'overview-max-window-scale',
         'hide-overview-dash',
+        'search-engine',
         'minimap-shade-opacity',
         'selection-border-size',
         'selection-border-radius-top',

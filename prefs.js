@@ -472,6 +472,23 @@ class SettingsWidget {
         booleanStateChanged('show-open-position-icon');
         booleanStateChanged('disable-topbar-styling', true);
         booleanStateChanged('hide-overview-dash');
+
+        // Web search engine combo
+        const searchCombo = this.builder.get_object('search-engine-combo');
+        if (searchCombo) {
+            const searchFile = this.dir.get_child('search-engines.json');
+            try {
+                const [, contents] = searchFile.load_contents(null);
+                const json = JSON.parse(new TextDecoder().decode(contents));
+                json.forEach(e => searchCombo.append(e.name, e.name));
+                searchCombo.set_active(this._settings.get_int('search-engine'));
+                searchCombo.connect('changed', () => {
+                    this._settings.set_int('search-engine', searchCombo.get_active());
+                });
+            } catch (e) {
+                console.error('PaperWM: failed to load search engines', e);
+            }
+        }
         // disabled since opposite of gnome-pill
         // booleanSetState('show-workspace-indicator');
         percentValueChanged('maximize-width-percent', 'maximize-width-percent');

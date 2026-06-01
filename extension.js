@@ -11,6 +11,7 @@ import {
 } from './imports.js';
 
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { enableQuickSearch, disableQuickSearch } from './quicksearch.js';
 
 /**
    The currently used modules
@@ -65,10 +66,13 @@ export default class PaperWM extends Extension {
                 m.enable(this);
             }
         });
+
+        enableQuickSearch(this.getSettings());
     }
 
     disable() {
         console.log('#PaperWM disabled');
+        disableQuickSearch();
         this.prepareForDisable();
         [...this.modules].reverse().forEach(m => {
             if (m['disable']) {
