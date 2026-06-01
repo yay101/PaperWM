@@ -75,7 +75,7 @@
     </key>
 
     <key type="as" name="toggle-top-and-position-bar">
-      <default><![CDATA[['<Super><Ctrl>b']]]></default>
+      <default><![CDATA[[]]]></default>
       <summary>Toggle the Top Bar and Window Position Bar on current workspace</summary>
     </key>
     <key type="as" name="toggle-top-bar">
@@ -156,32 +156,32 @@
     </key>
 
     <key type="as" name="toggle-scratch-window">
-      <default><![CDATA[['<Super>Escape']]]></default>
+      <default><![CDATA[[]]]></default>
       <summary>Toggle the most recent scratch window</summary>
     </key>
 
     <key type="as" name="toggle-scratch-layer">
-        <default><![CDATA[['<Super><Shift>Escape']]]></default>
+        <default><![CDATA[[]]]></default>
         <summary>Toggles the floating scratch layer</summary>
     </key>
 
     <key type="as" name="toggle-scratch">
-        <default><![CDATA[['<Super><Ctrl>Escape']]]></default>
+        <default><![CDATA[[]]]></default>
         <summary>Attach/detach the active window into the scratch layer</summary>
     </key>
 
     <key type="as" name="take-window">
-        <default><![CDATA[['<Super>t']]]></default>
+        <default><![CDATA[[]]]></default>
         <summary>Take the window, dropping it when finished navigating</summary>
     </key>
 
     <key type="as" name="switch-focus-mode">
-      <default><![CDATA[['<Super><Shift>c']]]></default>
+      <default><![CDATA[[]]]></default>
       <summary>Switch between Window Focus Modes (e.g. default, center)</summary>
     </key>
 
     <key type="as" name="switch-open-window-position">
-      <default><![CDATA[['<Super><Shift>w']]]></default>
+      <default><![CDATA[[]]]></default>
       <summary>Switch between positions for creating/dropping windows</summary>
     </key>
     <key type="as" name="open-window-position-right">
@@ -339,7 +339,7 @@
         <default><![CDATA[[]]]></default>
         <summary>Switch to the eleventh window</summary>
     </key>
-    
+
     <key type="as" name="switch-last">
         <default><![CDATA[['<Super>End']]]></default>
         <summary>Switch to the last window</summary>
@@ -446,7 +446,7 @@
     </key>
 
     <key type="as" name="close-window">
-      <default><![CDATA[['<Super>BackSpace']]]></default>
+      <default><![CDATA[['<Super>BackSpace', '<Super>w']]]></default>
       <summary>Close the active window</summary>
     </key>
   </schema>

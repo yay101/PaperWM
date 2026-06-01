@@ -476,7 +476,8 @@ class SettingsWidget {
         // Web search engine combo
         const searchCombo = this.builder.get_object('search-engine-combo');
         if (searchCombo) {
-            const searchFile = this.dir.get_child('search-engines.json');
+            const searchFile = Gio.File.new_for_path(
+                `${this.extension.path}/search-engines.json`);
             try {
                 const [, contents] = searchFile.load_contents(null);
                 const json = JSON.parse(new TextDecoder().decode(contents));
