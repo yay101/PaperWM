@@ -7,7 +7,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
 
-import { Settings, Utils, Tiling, Grab, Scratch } from './imports.js';
+import { Settings, Utils, Tiling, Grab } from './imports.js';
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -87,10 +87,6 @@ export function enableMultimonitorSupport() {
             // check if in the midst of a window resize action
             if (Tiling.inGrab &&
                 Tiling.inGrab instanceof Grab.ResizeGrab) {
-                const window = global.display?.focus_window;
-                if (window) {
-                    Scratch.makeScratch(window);
-                }
                 return;
             }
 

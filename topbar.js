@@ -11,7 +11,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as panelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as popupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-import { Settings, Utils, Tiling, Navigator, Scratch } from './imports.js';
+import { Settings, Utils, Tiling } from './imports.js';
 
 // eslint-disable-next-line no-undef
 const workspaceManager = global.workspace_manager;
@@ -24,7 +24,9 @@ const display = global.display;
 
 export let panelBox = Main.layoutManager.panelBox;
 
-export let menu, focusButton, openPositionButton;
+export let menu = { label: { apply_relative_transform_to_point: () => [0, 0] }, has_pointer: false, show: () => {}, hide: () => {}, isOpen: false };
+export let focusButton = { setFocusMode: () => {}, apply_relative_transform_to_point: () => [0, 0] };
+export let openPositionButton;
 let openPrefs, screenSignals, signals, gsettings;
 let activeOpenWindowPositions;
 
@@ -38,131 +40,26 @@ export function getPanelHeight() {
 
 export function enable (extension) {
     getPanelHeight();
-    activeOpenWindowPositions = [
-        {
-            mode: Settings.OpenWindowPositions.RIGHT,
-            active: () => Settings.prefs.open_window_position_option_right,
-        },
-        {
-            mode: Settings.OpenWindowPositions.LEFT,
-            active: () => Settings.prefs.open_window_position_option_left,
-        },
-        {
-            mode: Settings.OpenWindowPositions.START,
-            active: () => Settings.prefs.open_window_position_option_start,
-        },
-        {
-            mode: Settings.OpenWindowPositions.END,
-            active: () => Settings.prefs.open_window_position_option_end,
-        },
-        {
-            mode: Settings.OpenWindowPositions.DOWN,
-            active: () => Settings.prefs.open_window_position_option_down,
-        },
-        {
-            mode: Settings.OpenWindowPositions.UP,
-            active: () => Settings.prefs.open_window_position_option_up,
-        },
-    ];
-
-    openPrefs = () => extension.openPreferences();
     gsettings = extension.getSettings();
 
-    screenSignals = [];
     signals = new Utils.Signals();
-
-    Main.panel.statusArea.activities.hide();
-
-    menu = new WorkspaceMenu();
-    focusButton = new FocusButton();
-    openPositionButton = new OpenPositionButton();
-
-    Main.panel.addToStatusArea('WorkspaceMenu', menu, 1, 'left');
-    Main.panel.addToStatusArea('FocusButton', focusButton, 2, 'left');
-    Main.panel.addToStatusArea('OpenPositionButton', openPositionButton, 3, 'left');
-
-    /* This causes a crash on GNOME 48
-    Tiling.spaces.forEach(s => {
-        s.workspaceLabel.clutter_text.set_font_description(menu.label.clutter_text.font_description);
-    });*/
-
-    fixWorkspaceIndicator();
-    fixFocusModeIcon();
-    fixOpenPositionIcon();
-    fixStyle();
-
-    screenSignals.push(
-        workspaceManager.connect_after('workspace-switched',
-            (_workspaceManager, _from, to) => updateWorkspaceIndicator(to)));
+    screenSignals = [];
 
     signals.connect(Main.overview, 'showing', fixTopBar);
     signals.connect(Main.overview, 'hidden', () => {
         fixTopBar();
     });
 
-    signals.connect(gsettings, 'changed::disable-topbar-styling', (_settings, _key) => {
-        if (Settings.prefs.disable_topbar_styling) {
-            removeStyles();
-        }
-        else {
-            fixStyle();
-        }
-    });
-
-    signals.connect(gsettings, 'changed::show-window-position-bar', (_settings, _key) => {
-        const spaces = Tiling.spaces;
-        spaces.forEach(s => s.showPositionBarChanged());
-        fixStyle();
-    });
-
-    signals.connect(gsettings, 'changed::show-workspace-indicator', (_settings, _key) => {
-        fixWorkspaceIndicator();
-    });
-
-    signals.connect(gsettings, 'changed::show-focus-mode-icon', (_settings, _key) => {
-        fixFocusModeIcon();
-    });
-
-    signals.connect(gsettings, 'changed::show-open-position-icon', (_settings, _key) => {
-        fixOpenPositionIcon();
-    });
-
     signals.connect(panelBox, 'show', () => {
         fixTopBar();
-    });
-    // signals.connect(panelBox, 'hide', () => {
-    //     fixTopBar();
-    // });
-
-    signals.connect(Main.panel, 'scroll-event', (_actor, event) => {
-        topBarScrollAction(event);
-    });
-
-    /**
-     * Set clear-style when hiding overview.
-     */
-    signals.connect(Main.overview, 'hiding', () => {
-        fixStyle();
     });
 }
 
 export function disable() {
     signals.destroy();
     signals = null;
-    focusButton.destroy();
-    focusButton = null;
-    openPositionButton.destroy();
-    openPositionButton = null;
-    activeOpenWindowPositions = null;
-    menu.destroy();
-    menu = null;
-    Main.panel.statusArea.activities.show();
-    // remove PaperWM style classes names for Main.panel
-    removeStyles();
-
     screenSignals.forEach(id => workspaceManager.disconnect(id));
     screenSignals = [];
-    openPrefs = null;
     gsettings = null;
 }
 
@@ -171,68 +68,11 @@ export function disable() {
  * @param {Clutter.event} event
  * @returns
  */
-export function topBarScrollAction(event) {
-    if (!Settings.prefs.topbar_mouse_scroll_enable) {
-        return Clutter.EVENT_PROPAGATE;
-    }
+export function topBarScrollAction(_event) { return Clutter.EVENT_PROPAGATE; }
 
-    // if topbar workspaceMenu (indicator) has pointer, exit
-    if (menu && menu.has_pointer) {
-        return Clutter.EVENT_PROPAGATE;
-    }
+export function showWorkspaceMenu(_show) {}
 
-    // same check for gnome pill
-    const pill = Main.panel?.statusArea?.activities;
-    if (pill && pill.has_pointer) {
-        return Clutter.EVENT_PROPAGATE;
-    }
-
-    let direction = event.get_scroll_direction();
-    switch (direction) {
-    case Clutter.ScrollDirection.DOWN:
-        Tiling.spaces?.activeSpace.switchRight(false);
-        break;
-    case Clutter.ScrollDirection.UP:
-        Tiling.spaces?.activeSpace.switchLeft(false);
-        break;
-    }
-    const selected = Tiling.spaces?.activeSpace?.selectedWindow;
-    if (selected) {
-        let hasFocus = selected.has_focus();
-        selected.foreach_transient(mw => {
-            hasFocus = mw.has_focus() || hasFocus;
-        });
-        if (hasFocus) {
-            Tiling.focus_handler(selected);
-        } else {
-            Main.activateWindow(selected);
-        }
-    }
-
-    return Clutter.EVENT_PROPAGATE;
-}
-
-export function showWorkspaceMenu(show = false) {
-    if (show) {
-        Main.panel.statusArea.activities.hide();
-        menu.show();
-    }
-    else {
-        menu.hide();
-        Main.panel.statusArea.activities.show();
-    }
-}
-
-export function createButton(icon_name, accessible_name) {
-    return new St.Button({
-        reactive: true,
-        can_focus: true,
-        track_hover: true,
-        accessible_name,
-        style_class: 'button workspace-icon-button',
-        child: new St.Icon({ icon_name }),
-    });
-}
+export function createButton(_icon_name, _accessible_name) { return {}; }
 
 // registerClass, breaking our somewhat lame registerClass polyfill.
 export const PopupMenuEntry = GObject.registerClass(
@@ -644,36 +484,12 @@ in advanced settings</span>`);
 /**
  * Switches to the next position for opening new windows.
  */
-export function switchToNextOpenPositionMode() {
-    const activeModes = activeOpenWindowPositions
-        .filter(m => m.active())
-        .map(m => m.mode);
-
-    // if activeModes are empty, do nothing
-    if (activeModes.length <= 0) {
-        return;
-    }
-
-    const currIndex = activeModes.indexOf(Settings.prefs.open_window_position);
-    // if current mode is -1, then set the mode to the first option
-    let nextMode;
-    if (currIndex < 0) {
-        nextMode = activeModes[0];
-    }
-    else {
-        nextMode = activeModes[(currIndex + 1) % activeModes.length];
-    }
-
-    // simply need to set gsettings and mode will be set and updated
-    gsettings.set_int('open-window-position', nextMode);
-}
+export function switchToNextOpenPositionMode() {}
 
 /**
  * Switches to the next position for opening new windows.
  */
-export function setOpenPositionMode(mode) {
-    gsettings.set_int('open-window-position', mode);
-}
+export function setOpenPositionMode(_mode) {}
 
 export const OpenPositionButton = GObject.registerClass(
     class OpenPositionButton extends panelMenu.Button {
@@ -885,45 +701,16 @@ export function panelSpace() {
     return Tiling?.spaces?.monitors?.get(panelMonitor());
 }
 
-export function setNoBackgroundStyle() {
-    if (Settings.prefs.disable_topbar_styling) {
-        return;
-    }
+export function setNoBackgroundStyle() {}
 
-    removeStyles();
-    Main.panel.add_style_class_name('background-clear');
-}
+export function setTransparentStyle() {}
 
-export function setTransparentStyle() {
-    if (Settings.prefs.disable_topbar_styling) {
-        return;
-    }
-
-    removeStyles();
-    Main.panel.add_style_class_name('topbar-transparent-background');
-}
-
-export function removeStyles() {
-    ['background-clear', 'topbar-transparent-background'].forEach(s => {
-        Main.panel.remove_style_class_name(s);
-    });
-}
+export function removeStyles() {}
 
 /**
  * Applies correct style based on whether we use the windowPositionBar or not.
  */
-export function fixStyle() {
-    const space = panelSpace();
-    if (
-        Settings.prefs.show_window_position_bar &&
-        (space?.showPositionBar ?? true)
-    ) {
-        setNoBackgroundStyle();
-    }
-    else {
-        setTransparentStyle();
-    }
-}
+export function fixStyle() {}
 
 export function fixTopBar() {
     const space = panelSpace();
@@ -934,9 +721,9 @@ export function fixTopBar() {
     // selected is current (tiled) selected window (can be different to focused window)
     const selected = space.selectedWindow;
     const focused = display.focus_window;
-    const focusIsFloatOrScratch = focused && (space.isFloating(focused) || Scratch.isScratchWindow(focused));
-    // check if is currently fullscreened (check focused-floating, focused-scratch, and selected/tiled window)
-    const fullscreen = focusIsFloatOrScratch ? focused.fullscreen : selected && selected.fullscreen;
+    const focusIsFloat = focused && space.isFloating(focused);
+    // check if is currently fullscreened (check focused-floating and selected/tiled window)
+    const fullscreen = focusIsFloat ? focused.fullscreen : selected && selected.fullscreen;
 
     const wasVisible = panelBox.visible;
 
@@ -965,52 +752,21 @@ export function hideTopBar() {
     panelBox.hide();
 }
 
-export function fixWorkspaceIndicator() {
-    const show = Settings.prefs.show_workspace_indicator;
-    if (show) {
-        Main.panel.statusArea.activities.hide();
-        menu.show();
-    }
-    else {
-        menu.hide();
-        Main.panel.statusArea.activities.show();
-    }
-}
+export function fixWorkspaceIndicator() {}
 
-export function fixFocusModeIcon() {
-    Settings.prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
-    Tiling.spaces.forEach(s => s.showFocusModeIcon());
-}
+export function fixFocusModeIcon() {}
 
-export function fixOpenPositionIcon() {
-    Settings.prefs.show_open_position_icon ? openPositionButton.show() : openPositionButton.hide();
-}
+export function fixOpenPositionIcon() {}
 
 /**
    Override the activities label with the workspace name.
    let workspaceIndex = 0
 */
-export function updateWorkspaceIndicator(index) {
-    let spaces = Tiling.spaces;
-    let space = spaces?.spaceOf(workspaceManager.get_workspace_by_index(index));
-    if (space && space.monitor === panelMonitor()) {
-        setWorkspaceName(space.name);
-
-        // also update focus mode
-        focusButton.setFocusMode(space.focusMode);
-    }
-}
+export function updateWorkspaceIndicator(_index) {}
 
 /**
  * Refreshes topbar workspace indicator.
  */
-export function refreshWorkspaceIndicator() {
-    const space = panelSpace();
-    if (space) {
-        updateWorkspaceIndicator(space.index);
-    }
-}
+export function refreshWorkspaceIndicator() {}
 
-export function setWorkspaceName (name) {
-    menu && menu.setName(name);
-}
+export function setWorkspaceName (_name) {}

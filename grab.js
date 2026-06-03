@@ -6,7 +6,7 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import { Settings, Utils, Tiling, Navigator, Scratch, Gestures } from './imports.js';
+import { Settings, Utils, Tiling, Navigator, Gestures } from './imports.js';
 import { DispatcherMode, Easer } from './utils.js';
 
 export let grabbed = false;
@@ -64,8 +64,7 @@ export class MoveGrab {
         this.zoneActors = new Set();
 
         // save whether this was tiled window at start of grab
-        this.wasTiled = !(this.initialSpace.isFloating(metaWindow) ||
-            Scratch.isScratchWindow(metaWindow));
+        this.wasTiled = !this.initialSpace.isFloating(metaWindow);
 
         this.dndTargets = [];
     }
@@ -460,10 +459,6 @@ export class MoveGrab {
                 const space = dndTarget.space;
                 space.showSelection();
 
-                if (Scratch.isScratchWindow(metaWindow)) {
-                    Scratch.unmakeScratch(metaWindow);
-                }
-
                 // Remember the global coordinates of the clone
                 let [x] = clone.get_position();
                 space.addWindow(metaWindow, ...dndTarget.position);
@@ -499,7 +494,6 @@ export class MoveGrab {
             }
             else if (clone) {
                 metaWindow.move_frame(true, clone.x, clone.y);
-                Scratch.makeScratch(metaWindow);
                 this.initialSpace.moveDone();
                 this.initialSpace.showSelection();
 
@@ -510,16 +504,6 @@ export class MoveGrab {
                 clone.set_scale(1, 1);
                 clone.set_pivot_point(0, 0);
 
-                const halftime = 0.5 * Settings.prefs.animation_time;
-                params.time = halftime;
-                params.onComplete = () => {
-                    Easer.addEase(actor, {
-                        time: halftime,
-                        onComplete: () => {
-                            Scratch.unmakeScratch(metaWindow);
-                        },
-                    });
-                };
                 Easer.addEase(actor, params);
             }
 

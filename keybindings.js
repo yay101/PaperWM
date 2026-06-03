@@ -6,7 +6,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {
     Settings, Utils, Tiling, Navigator,
-    App, Scratch, LiveAltTab, Topbar
+    App, LiveAltTab
 } from './imports.js';
 
 const Seat = Clutter.get_default_backend().get_default_seat();
@@ -92,10 +92,6 @@ export function setupActions(settings) {
     /* Initialize keybindings */
     registerAction('live-alt-tab', LiveAltTab.liveAltTab, { settings });
     registerAction('live-alt-tab-backward', LiveAltTab.liveAltTab,
-        { settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED });
-
-    registerAction('live-alt-tab-scratch', LiveAltTab.liveAltTabScratch, { settings });
-    registerAction('live-alt-tab-scratch-backward', LiveAltTab.liveAltTabScratch,
         { settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED });
 
     registerAction('move-monitor-right', () => {
@@ -236,36 +232,11 @@ export function setupActions(settings) {
     registerMinimapAction("move-down",
         (_mw, space) => space.swap(Meta.MotionDirection.DOWN));
 
-    registerPaperAction("toggle-scratch-window",
-        Scratch.toggleScratchWindow);
-
-    registerPaperAction("toggle-scratch-layer",
-        Scratch.toggleScratch);
-
-    registerPaperAction("toggle-scratch",
-        Scratch.toggle,
-        Meta.KeyBindingFlags.PER_WINDOW);
-
     registerPaperAction("activate-window-under-cursor",
         Tiling.activateWindowUnderCursor);
 
     registerPaperAction("switch-focus-mode",
         Tiling.switchToNextFocusMode);
-
-    registerPaperAction("switch-open-window-position",
-        Topbar.switchToNextOpenPositionMode);
-    registerPaperAction("open-window-position-right",
-        (_mw, _space) => Topbar.setOpenPositionMode(Settings.OpenWindowPositions.RIGHT));
-    registerPaperAction("open-window-position-left",
-        (_mw, _space) => Topbar.setOpenPositionMode(Settings.OpenWindowPositions.LEFT));
-    registerPaperAction("open-window-position-start",
-        (_mw, _space) => Topbar.setOpenPositionMode(Settings.OpenWindowPositions.START));
-    registerPaperAction("open-window-position-end",
-        (_mw, _space) => Topbar.setOpenPositionMode(Settings.OpenWindowPositions.END));
-    registerPaperAction("open-window-position-down",
-        (_mw, _space) => Topbar.setOpenPositionMode(Settings.OpenWindowPositions.DOWN));
-    registerPaperAction("open-window-position-up",
-        (_mw, _space) => Topbar.setOpenPositionMode(Settings.OpenWindowPositions.UP));
 
     registerPaperAction("resize-h-inc",
         Tiling.resizeHInc,

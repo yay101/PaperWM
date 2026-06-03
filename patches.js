@@ -16,7 +16,7 @@ import * as WindowManager from 'resource:///org/gnome/shell/ui/windowManager.js'
 import * as WindowPreview from 'resource:///org/gnome/shell/ui/windowPreview.js';
 import * as Screenshot from 'resource:///org/gnome/shell/ui/screenshot.js';
 
-import { Utils, Tiling, Scratch, Settings, OverviewLayout } from './imports.js';
+import { Utils, Tiling, Settings, OverviewLayout } from './imports.js';
 
 /**
   Some of Gnome Shell's default behavior is really sub-optimal when using
@@ -272,41 +272,14 @@ export function setupOverrides() {
 
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
         win = win.meta_window ?? win; // should be metawindow, but get if not
-        // upstream (gnome value result - whta it would have done)
+        // upstream (gnome value result - what it would have done)
         const saved = getSavedPrototype(Workspace.Workspace, '_isOverviewWindow');
         const upstreamValue = saved?.call(this, win) ?? !win.skip_taskbar;
-
-        if (Scratch.isScratchWindow(win)) {
-            if (gsettings.get_boolean('only-scratch-in-overview')) {
-                return upstreamValue;
-            }
-
-            if (gsettings.get_boolean('disable-scratch-in-overview')) {
-                return false;
-            }
-        }
-
-        // if here then not scratch
-        if (gsettings.get_boolean('only-scratch-in-overview')) {
-            return false;
-        }
 
         return upstreamValue;
     });
 
-    const checkScratch = (metaWindow, metaWorkspace) => {
-        if (Scratch.isScratchWindow(metaWindow)) {
-            // check workspace match
-            return metaWorkspace === metaWindow?.get_workspace();
-        }
-
-        return false;
-    };
     registerOverridePrototype(Workspace.Workspace, '_isMyWindow', function(window) {
-        if (checkScratch(window, this.metaWorkspace)) {
-            return true;
-        }
-
         const space = Tiling.spaces.spaceOf(this.metaWorkspace);
         const onSpace = space.indexOf(window) >= 0;
         const onMonitor = this._monitor === space.monitor;
@@ -314,10 +287,6 @@ export function setupOverrides() {
     });
     registerOverridePrototype(WorkspaceThumbnail.WorkspaceThumbnail, '_isMyWindow', function(actor) {
         const window = actor.meta_window;
-        if (checkScratch(window, this.metaWorkspace)) {
-            return true;
-        }
-
         const space = Tiling.spaces.spaceOf(this.metaWorkspace);
         const onSpace = space.indexOf(window) >= 0;
         const onMonitor = this.monitorIndex === space.monitor.index;
