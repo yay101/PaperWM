@@ -104,6 +104,7 @@ export const WinpropsRow = GObject.registerClass({
         'optionList',
         'wmClass',
         'title',
+        'scratchLayer',
         'preferredWidth',
         'space',
         'focus',
@@ -159,8 +160,20 @@ export const WinpropsRow = GObject.registerClass({
             this.emit('changed');
         });
 
+        this._scratchLayer.set_active(this.winprop.scratch_layer ?? false);
+        this._scratchLayer.connect('state-set', () => {
+            let isActive = this._scratchLayer.get_active();
+            this.winprop.scratch_layer = isActive;
+
+            // if is active then disable the preferredWidth input
+            this._preferredWidth.set_sensitive(!isActive);
+
+            this.emit('changed');
+        });
+
         this._preferredWidth.set_text(this.winprop.preferredWidth ?? '');
-        this._preferredWidth.set_sensitive(true);
+        // if scratchLayer is active then users can't edit preferredWidth
+        this._preferredWidth.set_sensitive(!this.winprop.scratch_layer ?? true);
 
         this._preferredWidth.connect('changed', () => {
             // if has value, needs to be valid (have a value or unit)
@@ -285,7 +298,10 @@ export const WinpropsRow = GObject.registerClass({
     }
 
     _setAccelLabel() {
-        if (this.winprop.preferredWidth ?? false) {
+        if (this.winprop.scratch_layer ?? false) {
+            return 'scratch layer';
+        }
+        else if (this.winprop.preferredWidth ?? false) {
             return 'preferred width';
         }
         else if (this.winprop.spaceIndex !== undefined) {

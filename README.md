@@ -24,6 +24,8 @@ This fork includes several additions and fixes on top of upstream PaperWM:
 - **Hide dash in overview** — Setting to hide the GNOME Shell dash (dock) in the overview. Toggle in PaperWM preferences.
 - **Bundled web search** — Integrated [Quick Web Search](https://gitlab.com/chet-buddy/quick-web-search) as a built-in search provider. Type in the overview search to launch a web search. Supports 12 search engines, configurable in settings. Recognizes URLs and opens them directly.
 - **Cursor follows focus** — When switching windows via keyboard (Super+Arrow, live alt-tab) or trackpad swipe, the cursor warps to the center of the newly focused window. Mouse clicks leave the cursor alone. Skips warping if the cursor is already on the target window.
+- **Default app launcher keybindings** — `Super+T`, `Super+B`, `Super+Z` launch the default terminal, browser, and text editor respectively. Uses XDG desktop defaults with sensible fallbacks. Replace your custom `settings-daemon` keybindings.
+- **Overview spawn fix** — Windows created while the overview is open are now activated immediately instead of staying invisible until the overview is manually closed.
 
 ## Installation
 
@@ -113,6 +115,9 @@ You can scroll the tiling by swiping the trackpad horizontally with three finger
 | Default `window` Keybindings                                                                      | _Can be changed in PaperWM extension settings_ | 
 | ------                                                                                            | ------- |
 | <kbd>Super</kbd><kbd>Return</kbd> or <kbd>Super</kbd><kbd>N</kbd>                                 | Open a new windows (of the current application) |
+| <kbd>Super</kbd><kbd>T</kbd>                                                                      | Launch the default terminal |
+| <kbd>Super</kbd><kbd>B</kbd>                                                                      | Launch the default web browser |
+| <kbd>Super</kbd><kbd>Z</kbd>                                                                      | Launch the default text editor |
 | <kbd>Super</kbd><kbd>Backspace</kbd>                                                              | Close the active window |
 | <kbd>Super</kbd><kbd>.</kbd> or <kbd>Super</kbd><kbd>,</kbd>                                      | Switch to the next or previous window |
 | <kbd>Super</kbd><kbd>Left</kbd> or <kbd>Super</kbd><kbd>Right</kbd>                               | Activate the window to the left or right |

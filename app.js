@@ -184,3 +184,60 @@ export function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir = 
         }
     };
 }
+
+export function launchDefaultApp(appInfo) {
+    if (!appInfo) {
+        Main.notifyError('Failed to launch default application',
+            'Could not find default application');
+        return false;
+    }
+    try {
+        appInfo.launch([], null);
+        return true;
+    } catch (e) {
+        console.error('PaperWM: Failed to launch app:', e);
+        return false;
+    }
+}
+
+export function launchDefaultTerminal() {
+    let appInfo = Gio.AppInfo.get_default_for_type(
+        'application/x-terminal-emulator', false);
+    if (appInfo)
+        return launchDefaultApp(appInfo);
+
+    // Fallback: try known terminal desktop files
+    const fallbacks = [
+        'org.gnome.Terminal.desktop',
+        'org.kde.konsole.desktop',
+        'io.wezterm.desktop',
+        'alacritty.desktop',
+        'kitty.desktop',
+        'foot.desktop',
+    ];
+    for (const id of fallbacks) {
+        appInfo = Gio.DesktopAppInfo.new(id);
+        if (appInfo && launchDefaultApp(appInfo))
+            return true;
+    }
+
+    Main.notifyError('Failed to launch terminal',
+        'No terminal emulator found');
+    return false;
+}
+
+export function launchDefaultBrowser() {
+    let appInfo = Gio.AppInfo.get_default_for_uri_scheme('https')
+        ?? Gio.AppInfo.get_default_for_uri_scheme('http');
+    return launchDefaultApp(appInfo);
+}
+
+export function launchDefaultEditor() {
+    let appInfo = Gio.AppInfo.get_default_for_type('text/plain', false);
+    if (appInfo)
+        return launchDefaultApp(appInfo);
+
+    // Fallback: try gedit
+    appInfo = Gio.DesktopAppInfo.new('org.gnome.gedit.desktop');
+    return launchDefaultApp(appInfo);
+}

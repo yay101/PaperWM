@@ -6,7 +6,7 @@ import GObject from 'gi://GObject';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as AltTab from 'resource:///org/gnome/shell/ui/altTab.js';
 
-import { Settings, Keybindings, Tiling, Utils } from './imports.js';
+import { Settings, Keybindings, Tiling, Scratch, Utils } from './imports.js';
 import { Easer } from './utils.js';
 
 let switcherSettings;
@@ -21,14 +21,20 @@ export function disable() {
 }
 
 export function liveAltTab(meta_window, space, { _display, _screen, binding }) {
-    let tabPopup = new LiveAltTab(binding.is_reversed());
+    let tabPopup = new LiveAltTab(binding.is_reversed(), false);
+    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
+}
+
+export function liveAltTabScratch(meta_window, space, { _display, _screen, binding }) {
+    let tabPopup = new LiveAltTab(binding.is_reversed(), true);
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
 
 export const LiveAltTab = GObject.registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
-        _init(reverse) {
+        _init(reverse, scratchOnly) {
             this.reverse = reverse;
+            this.scratchOnly = scratchOnly;
             this.space = Tiling.spaces.selectedSpace;
             this.monitor = Tiling.spaces.selectedSpace.monitor;
             super._init();
@@ -38,9 +44,20 @@ export const LiveAltTab = GObject.registerClass(
             let tabList = global.display.get_tab_list(
                 Meta.TabList.NORMAL_ALL,
                 switcherSettings.get_boolean('current-workspace-only')
-                    ? global.workspace_manager.get_active_workspace() : null);
+                    ? global.workspace_manager.get_active_workspace() : null)
+                .filter(w => !Scratch.isScratchWindow(w));
 
-            return tabList;
+            let scratch = Scratch.getScratchWindows();
+
+            if (this.scratchOnly) {
+                return reverse ? scratch.reverse() : scratch;
+            }
+            else if (Scratch.isScratchWindow(global.display.focus_window)) {
+                // Access scratch windows in mru order with shift-super-tab
+                return scratch.concat(reverse ? tabList.reverse() : tabList);
+            } else {
+                return tabList.concat(reverse ? scratch.reverse() : scratch);
+            }
         }
 
         _initialSelection(backward, actionName) {
@@ -82,6 +99,12 @@ export const LiveAltTab = GObject.registerClass(
                 mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
                 break;
             case Keybindings.idOf('live-alt-tab-backward'):
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+                break;
+            case Keybindings.idOf('live-alt-tab-scratch'):
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
+                break;
+            case Keybindings.idOf('live-alt-tab-scratch-backward'):
                 mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
                 break;
             default:

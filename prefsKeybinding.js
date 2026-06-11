@@ -14,6 +14,7 @@ const sections = {
     windows: 'Windows',
     workspaces: 'Workspaces',
     monitors: 'Monitors',
+    scratch: 'Scratch layer',
 };
 
 const actions = {
@@ -54,7 +55,16 @@ const actions = {
         'switch-last',
         'live-alt-tab',
         'live-alt-tab-backward',
+        'live-alt-tab-scratch',
+        'live-alt-tab-scratch-backward',
         'switch-focus-mode',
+        'switch-open-window-position',
+        'open-window-position-right',
+        'open-window-position-left',
+        'open-window-position-down',
+        'open-window-position-up',
+        'open-window-position-start',
+        'open-window-position-end',
         'move-left',
         'move-right',
         'move-up',
@@ -110,6 +120,11 @@ const actions = {
         'move-monitor-left',
         'move-monitor-above',
         'move-monitor-below',
+    ],
+    scratch: [
+        'toggle-scratch-layer',
+        'toggle-scratch',
+        'toggle-scratch-window',
     ],
 };
 

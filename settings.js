@@ -97,10 +97,12 @@ export function enable(extension) {
     // Prevent it from being inserted into the tiling causing flickering and general disorder
     defwinprop({
         wm_class: "Gnome-shell-extension-prefs",
+        scratch_layer: true,
         focus: true,
     });
     defwinprop({
         wm_class: /gnome-screenshot/i,
+        scratch_layer: true,
         focus: true,
     });
 

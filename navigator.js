@@ -9,7 +9,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {
     Utils, Tiling, Keybindings, Topbar,
-    Minimap, Settings
+    Scratch, Minimap, Settings
 } from './imports.js';
 
 /**
@@ -323,6 +323,7 @@ class NavigatorClass {
 
         Topbar.fixTopBar();
 
+        Scratch.animateWindows();
         this.space.startAnimate();
     }
 
@@ -473,6 +474,9 @@ class NavigatorClass {
         if (selected && Tiling.inGrab && !this.was_accepted) {
             Tiling.focus_handler(selected);
         }
+
+        if (!Tiling.inGrab)
+            Scratch.showWindows();
 
         Topbar.fixTopBar();
 

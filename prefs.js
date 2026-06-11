@@ -301,6 +301,27 @@ class SettingsWidget {
         booleanStateChanged('open-window-position-option-down');
         booleanStateChanged('open-window-position-option-up');
 
+        const scratchOverview = this.builder.get_object('scratch-in-overview');
+        if (this._settings.get_boolean('only-scratch-in-overview'))
+            scratchOverview.set_active_id('only');
+        else if (this._settings.get_boolean('disable-scratch-in-overview'))
+            scratchOverview.set_active_id('never');
+        else
+            scratchOverview.set_active_id('always');
+
+        scratchOverview.connect('changed', obj => {
+            if (obj.get_active_id() === 'only') {
+                this._settings.set_boolean('only-scratch-in-overview', true);
+                this._settings.set_boolean('disable-scratch-in-overview', false);
+            } else if (obj.get_active_id() === 'never') {
+                this._settings.set_boolean('only-scratch-in-overview', false);
+                this._settings.set_boolean('disable-scratch-in-overview', true);
+            } else {
+                this._settings.set_boolean('only-scratch-in-overview', false);
+                this._settings.set_boolean('disable-scratch-in-overview', false);
+            }
+        });
+
         booleanStateChanged('show-window-position-bar');
 
         const enableGnomePill = this.builder.get_object('use-gnome-pill');

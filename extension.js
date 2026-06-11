@@ -7,7 +7,7 @@ import * as Util from 'resource:///org/gnome/shell/misc/util.js';
 
 import {
     Utils, Settings, Gestures, Keybindings, LiveAltTab, Navigator,
-    Stackoverlay, Workspace, Tiling, Topbar, Patches, App, Grab
+    Stackoverlay, Scratch, Workspace, Tiling, Topbar, Patches, App, Grab
 } from './imports.js';
 
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -22,6 +22,8 @@ import { enableQuickSearch, disableQuickSearch } from './quicksearch.js';
 
      - keybindings is a utility wrapper around mutters keybinding facilities.
 
+     - scratch is used to manage floating windows, or scratch windows.
+
      - liveAltTab is a simple altTab implementiation with live previews.
 
      - stackoverlay is somewhat kludgy. It makes clicking on the left or right
@@ -34,7 +36,7 @@ import { enableQuickSearch, disableQuickSearch } from './quicksearch.js';
      - Patches is used for monkey patching gnome shell behavior which simply
        doesn't fit paperwm.
 
-     - topbar provides auto-hide functionality for the top panel.
+     - topbar adds the workspace name to the topbar and styles it.
 
      - gestures is responsible for 3-finger swiping (only works in wayland).
 
@@ -47,7 +49,7 @@ import { enableQuickSearch, disableQuickSearch } from './quicksearch.js';
 export default class PaperWM extends Extension {
     modules = [
         Utils, Settings, Patches,
-        Gestures, Keybindings, LiveAltTab, Navigator, Stackoverlay,
+        Gestures, Keybindings, LiveAltTab, Navigator, Stackoverlay, Scratch,
         Workspace, Tiling, Topbar, App, Grab,
     ];
 

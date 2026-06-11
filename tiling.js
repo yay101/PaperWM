@@ -9,7 +9,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {
-    Settings, Utils, Lib, Gestures, Navigator, Grab, Topbar, Stackoverlay, Background
+    Settings, Utils, Lib, Gestures, Navigator, Grab, Topbar, Scratch, Stackoverlay, Background
 } from './imports.js';
 import { Easer, DispatcherMode } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
@@ -2132,6 +2132,8 @@ border-radius: ${borderWidth}px;
 
         windows.forEach((meta_window, _i) => {
             if (meta_window.above || meta_window.minimized) {
+                // Rough heuristic to figure out if a window should float
+                Scratch.makeScratch(meta_window);
                 return;
             }
             if (this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
@@ -3354,7 +3356,7 @@ export const Spaces = class Spaces extends Map {
 Signals.addSignalMethods(Spaces.prototype);
 
 /**
- * Return true if a window is tiled (e.g. not floating, not transient).
+ * Return true if a window is tiled (e.g. not floating, not scratch, not transient).
  * @param metaWindow
  */
 export function isTiled(metaWindow) {
@@ -3362,6 +3364,7 @@ export function isTiled(metaWindow) {
         !metaWindow ||
         metaWindow?.is_on_all_workspaces() ||
         isFloating(metaWindow) ||
+        isScratch(metaWindow) ||
         isTransient(metaWindow)
     ) {
         return false;
@@ -3417,6 +3420,13 @@ export function isFloating(metaWindow) {
     }
     let space = spaces.spaceOfWindow(metaWindow);
     return space.isFloating?.(metaWindow) ?? false;
+}
+
+export function isScratch(metaWindow) {
+    if (!metaWindow) {
+        return false;
+    }
+    return Scratch.isScratchWindow(metaWindow);
 }
 
 export function isMaximized(metaWindow) {
@@ -3926,7 +3936,20 @@ export function focusMonitor() {
  * @param callback
  */
 function callbackOnActorShow(actor, callback) {
-    signals.connectOneShot(actor, 'show', callback);
+    if (actor.visible) {
+        callback();
+        return;
+    }
+    let done = false;
+    const once = () => {
+        if (done) return;
+        done = true;
+        callback();
+    };
+    signals.connectOneShot(actor, 'show', once);
+    // Fallback: the show signal may have already fired before we connected
+    // (e.g., animateWindow hid the actor early), ensure callback still runs.
+    Utils.later_add(Meta.LaterType.IDLE, once);
 }
 
 /**
@@ -3943,6 +3966,9 @@ export function add_filter(meta_window) {
     }
 
     if (meta_window.is_on_all_workspaces()) {
+        return false;
+    }
+    if (Scratch.isScratchWindow(meta_window)) {
         return false;
     }
 
@@ -4035,10 +4061,16 @@ export function insertWindow(metaWindow, options = {}) {
             focusWindow = mru[1];
         }
 
+        let addToScratch = false;
+
         let winprop = Settings.find_winprop(metaWindow);
         if (winprop) {
             if (winprop.oneshot) {
                 Settings.winprops.splice(Settings.winprops.indexOf(winprop), 1);
+            }
+            if (winprop.scratch_layer) {
+                console.debug("#winprops", `Move ${metaWindow?.title} to scratch`);
+                addToScratch = true;
             }
 
             // pass winprop properties to metaWindow
@@ -4058,6 +4090,13 @@ export function insertWindow(metaWindow, options = {}) {
                 console.debug("#winprops", `setting ${metaWindow?.title} to focusOnOpen`);
                 metaWindow.focusOnOpen = true;
             }
+        }
+
+        if (addToScratch) {
+            connectSizeChanged();
+            Scratch.makeScratch(metaWindow);
+            activateWindowAfterRendered(actor, metaWindow);
+            return;
         }
 
         /**
@@ -4084,6 +4123,10 @@ export function insertWindow(metaWindow, options = {}) {
         // secondary monitors.
         connectSizeChanged();
         showWindow(metaWindow);
+        return;
+    } else if (Scratch.isScratchWindow(metaWindow)) {
+        // And make sure scratch windows are stuck
+        Scratch.makeScratch(metaWindow);
         return;
     }
 
@@ -4584,6 +4627,12 @@ export function getDefaultFocusMode() {
 // `MetaWindow::focus` handling
 export function focus_handler(metaWindow) {
     console.debug("focus:", metaWindow?.title);
+    if (Scratch.isScratchWindow(metaWindow)) {
+        setAllWorkspacesInactive();
+        Scratch.makeScratch(metaWindow);
+        Topbar.fixTopBar();
+        return;
+    }
 
     // If metaWindow is a transient window, return (after deselecting tiled focus indicators)
     if (isTransient(metaWindow)) {
@@ -4717,6 +4766,20 @@ export function focus_handler(metaWindow) {
 export function minimizeHandler(metaWindow) {
     if (metaWindow.minimized) {
         console.debug('minimized', metaWindow?.title);
+        // check if was tiled
+        if (isTiled(metaWindow)) {
+            metaWindow._tiled_on_minimize = true;
+        }
+        Scratch.makeScratch(metaWindow);
+    }
+    else {
+        console.debug('unminimized', metaWindow?.title);
+        if (metaWindow._tiled_on_minimize) {
+            delete metaWindow._tiled_on_minimize;
+            Utils.later_add(Meta.LaterType.IDLE, () => {
+                Scratch.unmakeScratch(metaWindow);
+            });
+        }
     }
 }
 
@@ -4933,6 +4996,13 @@ export function cycleWindowWidthDirection(metaWindow, direction) {
 
     let targetX = frame.x;
 
+    if (Scratch.isScratchWindow(metaWindow)) {
+        if (targetX + targetWidth > workArea.x + workArea.width - Settings.prefs.minimum_margin) {
+            // Move the window so it remains fully visible
+            targetX = workArea.x + workArea.width - Settings.prefs.minimum_margin - targetWidth;
+        }
+    }
+
     if (isMaximized(metaWindow)) {
         unmaximize(metaWindow, Meta.MaximizeFlags.BOTH);
     }
@@ -5038,7 +5108,7 @@ export function centerWindow(metaWindow, horizontal = true, vertical = false) {
     let targetY = vertical ? workArea.y + Math.round((workArea.height - frame.height) / 2) : frame.y;
     targetY = Math.max(targetY, workArea.y);
     if (space.indexOf(metaWindow) === -1) {
-        metaWindow.move_frame(true, targetX + monitor.x, targetY + monitor.y);
+        Scratch.easeScratch(metaWindow, targetX + monitor.x, targetY + monitor.y);
     } else {
         move_to(space, metaWindow, {
             x: targetX,

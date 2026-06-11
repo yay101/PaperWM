@@ -449,6 +449,21 @@
       <default><![CDATA[['<Super>BackSpace', '<Super>w']]]></default>
       <summary>Close the active window</summary>
     </key>
+
+    <key type="as" name="launch-terminal">
+      <default><![CDATA[['<Super>t']]]></default>
+      <summary>Launch the default terminal</summary>
+    </key>
+
+    <key type="as" name="launch-browser">
+      <default><![CDATA[['<Super>b']]]></default>
+      <summary>Launch the default web browser</summary>
+    </key>
+
+    <key type="as" name="launch-editor">
+      <default><![CDATA[['<Super>z']]]></default>
+      <summary>Launch the default text editor</summary>
+    </key>
   </schema>
 
   <schema id="org.gnome.shell.extensions.paperwm.workspace">
