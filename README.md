@@ -26,6 +26,7 @@ This fork includes several additions and fixes on top of upstream PaperWM:
 - **Cursor follows focus** — When switching windows via keyboard (Super+Arrow, live alt-tab) or trackpad swipe, the cursor warps to the center of the newly focused window. Mouse clicks leave the cursor alone. Skips warping if the cursor is already on the target window.
 - **Default app launcher keybindings** — `Super+T`, `Super+B`, `Super+Z` launch the default terminal, browser, and text editor respectively. Uses XDG desktop defaults with sensible fallbacks. Replace your custom `settings-daemon` keybindings.
 - **Overview spawn fix** — Windows created while the overview is open are now activated immediately instead of staying invisible until the overview is manually closed.
+- **Rounded window corners** — Forces rounded corners on all PaperWM-managed windows (tiled and scratch). Reuses the existing *Window border-radius for top/bottom corners* settings in PaperWM preferences. Set both radii to 0 to disable. Note: only PaperWM windows are affected — native fullscreen, the overview grid, GNOME Shell OSD/popups, etc. are unchanged. May conflict with other window-shaping extensions.
 
 ## Installation
 

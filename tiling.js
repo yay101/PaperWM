@@ -161,10 +161,13 @@ export function enable(extension) {
     const changedBorder = () => {
         spaces.forEach(s => {
             Settings.prefs.selection_border_size <= 0 ? s.hideSelection() : s.showSelection();
+            s.getWindows().forEach(applyWindowCornerRadius);
             if (s.selectedWindow) {
                 allocateClone(s.selectedWindow);
             }
         });
+        // also re-apply to floating/scratch windows which live outside the tiling
+        Scratch.getScratchWindows().forEach(applyWindowCornerRadius);
     };
     gsettings.connect('changed::selection-border-size', changedBorder);
     gsettings.connect('changed::selection-border-radius-top', changedBorder);
@@ -2132,8 +2135,12 @@ border-radius: ${borderWidth}px;
 
         windows.forEach((meta_window, _i) => {
             if (meta_window.above || meta_window.minimized) {
-                // Rough heuristic to figure out if a window should float
-                Scratch.makeScratch(meta_window);
+                // Leave above/minimized windows alone at startup. Promoting them
+                // to scratch here (make_above/stick/move_resize + tween) mutates
+                // window state mid-init and has been observed to crash Clutter's
+                // event dispatch (use-after-free in clutter_event_free). Pre-
+                // existing above/minimized windows are simply skipped, matching
+                // the behaviour before the scratch integration was added.
                 return;
             }
             if (this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
@@ -3498,6 +3505,8 @@ export function registerWindow(metaWindow) {
     clone.targetX = 0;
     clone.meta_window = metaWindow;
 
+    applyWindowCornerRadius(metaWindow);
+
     signals.connect(metaWindow, "focus", (metaWindow, user_data) => {
         focus_handler(metaWindow, user_data);
     });
@@ -3606,6 +3615,47 @@ export function registerWindow(metaWindow) {
     return true;
 }
 
+/**
+ * Returns the CSS border-radius string for the current
+ * selection-border-radius-{top,bottom} settings, e.g. "12px 12px 0px 0px".
+ */
+export function windowCornerRadiusStyle() {
+    const rtop = Settings.prefs.selection_border_radius_top;
+    const rbottom = Settings.prefs.selection_border_radius_bottom;
+    return `${rtop}px ${rtop}px ${rbottom}px ${rbottom}px`;
+}
+
+/**
+ * Forces rounded corners on the given window's PaperWM clone (and shade).
+ * For floating/scratch windows, also rounds the MetaWindowActor itself.
+ * Reuses the existing selection-border-radius-{top,bottom} settings, so users
+ * who set both radii to 0 effectively disable rounded corners.
+ */
+export function applyWindowCornerRadius(metaWindow) {
+    if (!metaWindow) {
+        return;
+    }
+    const rtop = Settings.prefs.selection_border_radius_top;
+    const rbottom = Settings.prefs.selection_border_radius_bottom;
+    const radius = `${rtop}px ${rtop}px ${rbottom}px ${rbottom}px`;
+
+    const clone = metaWindow.clone;
+    if (clone) {
+        clone.style = `border-radius: ${radius}; clip-to-bounds: true;`;
+        if (clone.shade) {
+            clone.shade.style =
+                `border-radius: ${rtop + 1}px ${rtop + 1}px ${rbottom + 1}px ${rbottom + 1}px;`;
+        }
+    }
+
+    if (isFloating(metaWindow)) {
+        const actor = metaWindow.get_compositor_private();
+        if (actor) {
+            actor.style = `border-radius: ${radius}; clip-to-bounds: true;`;
+        }
+    }
+}
+
 export function allocateClone(metaWindow) {
     if (!metaWindow?.clone) {
         return;
@@ -3627,6 +3677,8 @@ export function allocateClone(metaWindow) {
     const [width, height] = clone.get_size();
     metaWindow.clone.shade.set_position(-1, -1);
     metaWindow.clone.shade.set_size(width + 2, height + 2);
+
+    applyWindowCornerRadius(metaWindow);
 
     if (metaWindow.clone.first_child.name === 'selection') {
         let selection = metaWindow.clone.first_child;
